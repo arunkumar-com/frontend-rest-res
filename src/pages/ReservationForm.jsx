@@ -1,77 +1,85 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 
+const TABLE_OPTIONS = [
+  { label: '2-Seat Table', value: 'twoSeater', note: 'Perfect for couples' },
+  { label: '4-Seat Table', value: 'fourSeater', note: 'For small groups' },
+];
+
 const ReservationForm = () => {
-  // const { id } = useParams();
   const { restaurantId: id } = useParams();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [restaurantValid, setRestaurantValid] = useState(true);
+  const location = useLocation();
+
+  const queryParams = new URLSearchParams(location.search);
+  const defaultDate = queryParams.get('date') || '';
+  const defaultTime = queryParams.get('time') || '';
+  const defaultTableType = queryParams.get('tableType') || 'twoSeater';
+
   const [formData, setFormData] = useState({
-    date: '',
-    time: '',
-    tableType: 'twoSeater', // Updated to match backend enum
+    date: defaultDate,
+    time: defaultTime,
+    tableType: defaultTableType,
     specialRequests: ''
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const today = new Date().toISOString().split('T')[0];
+  const isValidObjectId = typeof id === 'string' && /^[a-f\d]{24}$/i.test(id);
 
   useEffect(() => {
-    const isValidObjectId = typeof id === 'string' && /^[a-f\d]{24}$/i.test(id);
-    setRestaurantValid(isValidObjectId);
-    console.log('Restaurant ID from URL:', id);
+    if (!isValidObjectId) setError('Invalid restaurant ID in URL.');
   }, [id]);
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
+    if (!isValidObjectId) return;
+
     setLoading(true);
     setError(null);
 
-    if (!restaurantValid) {
-      setError('Invalid restaurant ID. Please ensure the URL contains a valid 24-character ID.');
-      setLoading(false);
-      return;
-    }
-
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
+      if (!token) return navigate('/login');
 
-      await axios.post('https://backend-rest-res.onrender.com/api/reservations', {
-        restaurantId: id,
-        date: formData.date,
-        time: formData.time,
-        tableType: formData.tableType,
-        numberOfGuests: formData.tableType === 'fourSeater' ? 4 : 2,
-        specialRequests: formData.specialRequests
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post(
+        'https://backend-rest-res.onrender.com/api/reservations',
+        {
+          restaurantId: id,
+          ...formData,
+          numberOfGuests: formData.tableType === 'fourSeater' ? 4 : 2
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
       navigate('/thank-you');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to make reservation. Please try again.');
+      setError(err.response?.data?.message || 'Reservation failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const today = new Date().toISOString().split('T')[0];
-
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="bg-white rounded-2xl shadow-lg p-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-6">Make a Reservation</h1>
-        {error && <div className="mb-6 p-4 bg-red-50 border-red-200 rounded-lg text-red-600">{error}</div>}
+
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Date */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
             <input
@@ -85,6 +93,7 @@ const ReservationForm = () => {
             />
           </div>
 
+          {/* Time */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Time</label>
             <select
@@ -97,40 +106,36 @@ const ReservationForm = () => {
               <option value="">Select a time</option>
               {[...Array(11)].map((_, i) => {
                 const hour = 11 + i;
-                return (
-                  <option key={hour} value={`${hour}:00`}>
-                    {hour <= 12 ? `${hour}:00 AM` : `${hour - 12}:00 PM`}
-                  </option>
-                );
+                const display = hour <= 12 ? `${hour}:00 AM` : `${hour - 12}:00 PM`;
+                return <option key={hour} value={`${hour}:00`}>{display}</option>;
               })}
             </select>
           </div>
 
+          {/* Table Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Table Type</label>
             <div className="grid grid-cols-2 gap-4">
-              {[
-                { label: '2-Seat Table', value: 'twoSeater', note: 'Perfect for couples' },
-                { label: '4-Seat Table', value: 'fourSeater', note: 'For small groups' }
-              ].map(option => (
-                <label key={option.value} className="relative flex cursor-pointer">
+              {TABLE_OPTIONS.map(({ label, value, note }) => (
+                <label key={value} className="relative flex cursor-pointer">
                   <input
                     type="radio"
                     name="tableType"
-                    value={option.value}
-                    checked={formData.tableType === option.value}
+                    value={value}
+                    checked={formData.tableType === value}
                     onChange={handleChange}
                     className="peer sr-only"
                   />
                   <div className="w-full p-4 bg-white border border-gray-200 rounded-lg peer-checked:border-black peer-checked:bg-gray-50">
-                    <span className="font-medium text-gray-800">{option.label}</span>
-                    <span className="text-sm text-gray-500 block">{option.note}</span>
+                    <span className="font-medium text-gray-800">{label}</span>
+                    <span className="text-sm text-gray-500 block">{note}</span>
                   </div>
                 </label>
               ))}
             </div>
           </div>
 
+          {/* Special Requests */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Special Requests (Optional)</label>
             <textarea
@@ -138,11 +143,12 @@ const ReservationForm = () => {
               value={formData.specialRequests}
               onChange={handleChange}
               rows="3"
-              className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black resize-none"
               placeholder="Any special requests or dietary requirements?"
+              className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black resize-none"
             />
           </div>
 
+          {/* Submit */}
           <button
             type="submit"
             disabled={loading}

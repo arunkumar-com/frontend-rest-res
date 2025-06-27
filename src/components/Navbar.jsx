@@ -1,65 +1,62 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [username, setUsername] = useState('');
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // Check if user is logged in
-    const token = localStorage.getItem('token');
-    const storedUsername = localStorage.getItem('username');
-    if (token && storedUsername) {
-      setIsLoggedIn(true);
-      setUsername(storedUsername);
-    }
-  }, []);
+  const { user, logout } = useAuth();
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('username');
-    setIsLoggedIn(false);
-    navigate('/');
+    logout();
+    navigate("/login");
   };
 
   return (
-    <nav className="bg-white shadow-sm">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo/Brand */}
-          <Link to="/" className="text-xl font-semibold text-primary">
-            Restaurant Reservations
-          </Link>
+    <nav className="bg-white shadow-sm py-4 px-6 flex justify-between items-center relative">
+      <div>
+        <Link to="/" className="text-xl font-bold text-gray-800">
+          🍽️ RestoReserve
+        </Link>
+      </div>
 
-          {/* Navigation Links */}
-          <div className="flex items-center gap-4">
-            <Link to="/" className="text-gray-600 hover:text-primary">
-              Home
-            </Link>
-            
-            {isLoggedIn ? (
-              <>
-                <span className="text-gray-600">Welcome, {username}!</span>
-                <button
-                  onClick={handleLogout}
-                  className="btn-secondary"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link to="/login" className="btn-secondary">
-                  Login
-                </Link>
-                <Link to="/register" className="btn-primary">
-                  Register
-                </Link>
-              </>
-            )}
-          </div>
+      {user && (
+        <div className="absolute left-1/2 transform -translate-x-1/2 text-indigo-600 font-serif text-lg">
+          Welcome, {user.name || user.email}
         </div>
+      )}
+
+      <div className="flex items-center space-x-4">
+        {user && (
+          <Link
+            to="/"
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+          >
+            Home
+          </Link>
+        )}
+
+        {user ? (
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
+          >
+            Logout
+          </button>
+        ) : (
+          <>
+            <Link
+              to="/login"
+              className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
+            >
+              Login
+            </Link>
+            <Link
+              to="/register"
+              className="bg-gray-100 text-gray-800 px-4 py-2 rounded hover:bg-gray-200"
+            >
+              Register
+            </Link>
+          </>
+        )}
       </div>
     </nav>
   );

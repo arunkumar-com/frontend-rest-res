@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -10,6 +11,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleChange = (e) => {
     setFormData({
@@ -29,13 +31,11 @@ const Login = () => {
         formData
       );
 
-      // Save token and full user info to localStorage
       const { token, _id, username, email, isAdmin } = response.data;
-      const userInfo = { _id, username, email, isAdmin, token };
-      localStorage.setItem('token', token);
-      localStorage.setItem('userInfo', JSON.stringify(userInfo));
+      const userInfo = { _id, name: username, email, isAdmin, token };
 
-      // Redirect to home page
+      login(userInfo); // <- Updates context and localStorage
+
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred during login');
@@ -57,10 +57,7 @@ const Login = () => {
           )}
 
           <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
               Email Address
             </label>
             <input
@@ -76,10 +73,7 @@ const Login = () => {
           </div>
 
           <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
               Password
             </label>
             <input
@@ -94,11 +88,7 @@ const Login = () => {
             />
           </div>
 
-          <button
-            type="submit"
-            className="btn-primary w-full"
-            disabled={loading}
-          >
+          <button type="submit" className="btn-primary w-full" disabled={loading}>
             {loading ? 'Logging in...' : 'Login'}
           </button>
 
@@ -113,7 +103,5 @@ const Login = () => {
     </div>
   );
 };
-
-
 
 export default Login;

@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
 
 const RestaurantCard = ({ restaurant }) => {
-  const { _id, name, description, image } = restaurant;
+  const { _id, name, description, image, tables } = restaurant;
+  const totalSeats = (tables?.twoSeater || 0) * 2 + (tables?.fourSeater || 0) * 4;
 
   return (
     <div className="group relative bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
@@ -20,20 +21,24 @@ const RestaurantCard = ({ restaurant }) => {
           </Link>
         </div>
       </div>
-      
+
       <div className="p-6 space-y-4">
         <h3 className="text-2xl font-semibold text-gray-800">{name}</h3>
         <p className="text-gray-600 line-clamp-2 text-sm">{description}</p>
-        
-        <div className="border-t pt-4">
+
+        <div className="border-t pt-4 space-y-2">
+          <div className="text-center bg-gray-100 rounded-lg py-2">
+            <p className="text-sm text-gray-600">Total Seats</p>
+            <p className="text-xl font-bold text-gray-800">{totalSeats}</p>
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center p-2 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-600">2-Seat Tables</p>
-              <p className="text-lg font-semibold text-gray-800">{restaurant.tables.twoSeater}</p>
+              <p className="text-lg font-semibold text-gray-800">{tables.twoSeater}</p>
             </div>
             <div className="text-center p-2 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-600">4-Seat Tables</p>
-              <p className="text-lg font-semibold text-gray-800">{restaurant.tables.fourSeater}</p>
+              <p className="text-lg font-semibold text-gray-800">{tables.fourSeater}</p>
             </div>
           </div>
         </div>
