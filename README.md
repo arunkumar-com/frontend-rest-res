@@ -82,8 +82,8 @@ Make sure the backend server is running on port `5000` or adjust the API base UR
 
 Frontend is deployable via:
 
-* [Netlify](https://www.netlify.com)
-* [Vercel](https://vercel.com)
+* [Netlify](https://verdant-cactus-3aac14.netlify.app/)
+
 
 Update the `.env` (if used) with the appropriate API base URL.
 
@@ -94,13 +94,5 @@ Update the `.env` (if used) with the appropriate API base URL.
 * Do not share this code with others.
 * Do not mention the company name anywhere in the code or README.
 * You are encouraged to open-source this project for portfolio purposes.
-
----
-
-## 🌐 Live URL (example)
-
-```bash
-Frontend: https://your-frontend-url.netlify.app
-```
 
 ---
